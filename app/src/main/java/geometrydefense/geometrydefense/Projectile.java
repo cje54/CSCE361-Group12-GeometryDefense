@@ -2,6 +2,7 @@ package geometrydefense.geometrydefense;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.media.Image;
 
@@ -13,6 +14,7 @@ public class Projectile {
     private double speed;
     private double damage;
     private Level level;
+    private double angle;
 
 
     public Projectile(Bitmap sprite, Point position, Enemy target, double speed, double damage,Level level) {
@@ -22,6 +24,7 @@ public class Projectile {
         this.speed = speed;
         this.damage = damage;
         this.level=level;
+        this.angle=0;
     }
 
     public void update(){
@@ -30,7 +33,7 @@ public class Projectile {
         double xdiff = this.target.getPosition().x-this.position.x;
         double ydiff = this.target.getPosition().y-this.position.y;
         //get angle from projectile towards its target
-        double direction = Math.atan2(ydiff,xdiff);
+        double direction = Math.atan2(ydiff, xdiff);
         this.position.x = this.position.x+(int)(speed*Math.cos(direction));
         this.position.y = this.position.y+(int)(speed*Math.sin(direction));
         //check if the projectile is within its speed range of hitting the target, instead of sqrt the sum, just square speed
@@ -40,7 +43,7 @@ public class Projectile {
     }
 
     public void draw(Canvas canvas){
-        canvas.drawBitmap(this.sprite,this.position.x-this.sprite.getWidth()/2,this.position.y-this.sprite.getHeight()/2,null);
+        canvas.drawBitmap(this.sprite, this.position.x,this.position.y, null);
 
     }
 

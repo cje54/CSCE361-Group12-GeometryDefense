@@ -2,6 +2,8 @@ package geometrydefense.geometrydefense;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
 
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ public class Tower{
     private Level level;
     private int attackSpeed;
     private int range;
+    private boolean displayRange=false;
 
 
     public Tower(Point position, int damage, int attackSpeed, int range, Bitmap towerImage, Bitmap projImage, Level level) {
@@ -67,11 +70,23 @@ public class Tower{
 
     public void draw(Canvas canvas) {
         canvas.drawBitmap(this.towerImage,this.position.x-this.towerImage.getWidth()/2,this.position.y-this.towerImage.getHeight()/2,null);
+        //if displayrange is true draw the range of the tower
+        if(this.displayRange){
+            Paint p = new Paint();
+            p.setColor(Color.GRAY);
+            p.setStyle(Paint.Style.FILL);
+            p.setAlpha(50);
+            canvas.drawCircle(this.position.x,this.position.y,this.range,p);
+        }
     }
 
     public int getValue(){
         //get actual value when upgrades implemented
         return 70;
+    }
+
+    public void toggleRange(){
+        this.displayRange=!this.displayRange;
     }
 
     public Bitmap getTowerImage() {

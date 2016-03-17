@@ -111,11 +111,18 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
 
         } if (event.getAction() == MotionEvent.ACTION_UP) {
             // touch was released
+            //check if in buy or sell mode and if not, check and see if a tower was selected to view range
+            Point action = roundToNearest(new Point((int)event.getX(),(int)event.getY()));
             if(this.buyMode){
-                this.buyTower(roundToNearest(new Point((int)event.getX(),(int)event.getY())));
-            }
-            if(this.sellMode){
-                this.sellTower(roundToNearest((new Point((int)event.getX(),(int)event.getY()))));
+                this.buyTower(action);
+            }else  if(this.sellMode){
+                this.sellTower(action);
+            }else {
+                for (Tower t : this.towersOnScreen) {
+                    if (action.x == t.getPosition().x && action.y == t.getPosition().y) {
+                        t.toggleRange();
+                    }
+                }
             }
 
         }
@@ -126,7 +133,7 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
 
     //take a point and round its coordinates to the nearest 30 for the grid size of the game to place towers-then add 15 to place tower in middle of grid square
     public Point roundToNearest(Point p){
-        int multiple =30;
+        int multiple =60;
         p.x=Math.round(p.x/multiple)*multiple+multiple/2;
         p.y=Math.round(p.y/multiple)*multiple+multiple/2;
         return p;
@@ -137,14 +144,13 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         if(gold>=towerCost){
             //check if the tower is in a valid position
             if(validPosition(position)) {
-                Tower t = new Tower(position, 50, 20, 200, this.towerImage, this.projImage, this);
+                Tower t = new Tower(position, 50, 5, 200, this.towerImage, this.projImage, this);
                 this.updateGold(-towerCost);
                 this.towersOnScreen.add(t);
             }
         }
         //whether buy was succesful or not, remove buymode and reset towerpoint so the tower isnt displayed anymore
         this.buyTowerPoint=null;
-        this.buyMode=false;
     }
 
     public boolean validPosition(Point position){
@@ -167,8 +173,6 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
                 break; //towers cannot be on top of each other so break loop
             }
         }
-        //whether tower was sold or not, remove sellmode
-        this.sellMode=false;
 
     }
 
@@ -249,7 +253,7 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
 
 
     public void sendWave(){
-        timetoNextWave=900;
+        timetoNextWave=450;
         enemiesLeft+=10;
         spawnEnemy();
     }
@@ -302,5 +306,3 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
     }
 
 }
-
-

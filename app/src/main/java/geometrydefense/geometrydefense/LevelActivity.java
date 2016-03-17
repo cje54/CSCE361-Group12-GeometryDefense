@@ -1,6 +1,7 @@
 package geometrydefense.geometrydefense;
 
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
@@ -39,16 +40,35 @@ public class LevelActivity extends AppCompatActivity {
         });
 
         //set listeners for the buy and sell button
-        ((Button)findViewById(R.id.buy_btn)).setOnClickListener(new View.OnClickListener() {
+        final Button buy=(Button)findViewById(R.id.buy_btn);
+        final Button sell=(Button)findViewById(R.id.sell_btn);
+
+        buy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //set Color to green if in buy mode or gray else
+                if(buy.getCurrentTextColor()==Color.GREEN){
+                    buy.setTextColor(Color.WHITE);
+                }else{
+                    buy.setTextColor(Color.GREEN);
+                }
+                //reset sell color if it was never turned off
+                sell.setTextColor(Color.WHITE);
                 level.buyBtn();
             }
         });
-        ((Button)findViewById(R.id.sell_btn)).setOnClickListener(new View.OnClickListener() {
+
+        sell.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                //set Color to red if in sell mode or gray else
+                if(sell.getCurrentTextColor()==Color.RED){
+                    sell.setTextColor(Color.WHITE);
+                }else{
+                    sell.setTextColor(Color.RED);
+                }
+                //reset buy color if it was never turned off
+                buy.setTextColor(Color.WHITE);
                 level.sellBtn();
             }
         });
