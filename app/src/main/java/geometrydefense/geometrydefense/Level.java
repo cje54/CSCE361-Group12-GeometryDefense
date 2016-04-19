@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -23,19 +24,19 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
     private ArrayList<Enemy> enemiesOnScreen = new ArrayList<Enemy>();
     private ArrayList<Projectile> projOnScreen = new ArrayList<Projectile>();
     private ArrayList<Tower> destroyTower = new ArrayList<Tower>(); // keep track of list of objects to remove from screen since they cant be removed while looping though list
-    private ArrayList<Enemy> deadEnemy=new ArrayList<Enemy>();
+    private ArrayList<Enemy> deadEnemy = new ArrayList<Enemy>();
     private ArrayList<Projectile> destroyProj = new ArrayList<Projectile>();
-    private int gold=1000;
-    private int lives=10;
+    private int gold = 1000;
+    private int lives = 10;
     private int towerCost = 100;
-    private double timetoNextWave=-1;     //number of ticks before wave is sent at 30 fps
-    private double timetoNextEnemy=0;     //number of ticks before next enemy of a wave is sent
-    private int enemiesLeft=0;      //number of enemies remaining in wave
-    private int enemyWave=0;     //current enemy wave number-used to choose which enemy to spawn from list
+    private double timetoNextWave = -1;     //number of ticks before wave is sent at 30 fps
+    private double timetoNextEnemy = 0;     //number of ticks before next enemy of a wave is sent
+    private int enemiesLeft = 0;      //number of enemies remaining in wave
+    private int enemyWave = 0;     //current enemy wave number-used to choose which enemy to spawn from list
     private ArrayList<Enemy> enemyWaves = new ArrayList<Enemy>();
     private ArrayList<Point> enemyPath = new ArrayList<Point>();
     private LevelActivity activity;     //keep the creating activity to keep track of ui elements
-    private boolean buyMode=false;  //boolean to keep track of if a tower is being placed -resets after placing tower
+    private boolean buyMode = false;  //boolean to keep track of if a tower is being placed -resets after placing tower
     private boolean sellMode = false; //same as buyMode except for selling an existing tower instead
     private Point buyTowerPoint;    //Point to keep track of where the user is hovering to place their tower-used to draw tower
     private float density = getResources().getDisplayMetrics().density;
@@ -45,7 +46,7 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
     private int dstHeight = (getResources().getDisplayMetrics().heightPixels) - 180;
     private int bgWidth = 540;
     private int bgHieght = 777;
-
+    private PlacementSquare[][] placementPositions = new PlacementSquare[9][13]; // 9 13 seems to work best for this map
 
 
 
@@ -66,10 +67,32 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         towerImage = BitmapFactory.decodeResource(getResources(),R.drawable.tower_sprite,options4sprites);
         projImage = BitmapFactory.decodeResource(getResources(),R.drawable.projectile_sprite,options4sprites);
 
+        //tower points
+        for(int i = 0; i < 9; i++){
+            for(int j = 0; j < 13; j++){
+                placementPositions[i][j] = new PlacementSquare(scaleIntW(60 * i),scaleIntH(60 * j),scaleIntW(60 * i + 60),scaleIntH(60 * j + 60), true);
+            }
+        }
+        //setting pathways to unplaceable
+        for(int j = 0; j < 12; j++){
+            placementPositions[1][j].setPlaceable(false);
+        }
+        for(int j = 1; j < 12; j++){
+            placementPositions[3][j].setPlaceable(false);
+        }
+        for(int j = 1; j < 12; j++){
+            placementPositions[5][j].setPlaceable(false);
+        }
+        for(int j = 1; j < 12; j++){
+            placementPositions[7][j].setPlaceable(false);
+        }
+        placementPositions[2][11].setPlaceable(false);
+        placementPositions[6][11].setPlaceable(false);
+        placementPositions[4][1].setPlaceable(false);
+        placementPositions[8][1].setPlaceable(false);
+
+
         //create path list-enemies will start at first point and then go through all points until reaching the end
-
-
-
         enemyPath.add(new Point(scalePointW(90.0),scalePointH(0.0)));
         enemyPath.add(new Point(scalePointW(90.0),scalePointH(690.0)));
         enemyPath.add(new Point(scalePointW(210.0),scalePointH(690.0)));
@@ -109,7 +132,9 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
     @Override
     //mouse events on canvas
     public boolean onTouchEvent(MotionEvent event) {
+
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            System.out.println("down");
             // screen pressed
             if(this.buyMode){
                 this.buyTowerPoint=roundToNearest(new Point((int)event.getX(),(int)event.getY()));
@@ -122,9 +147,19 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
             }
 
         } if (event.getAction() == MotionEvent.ACTION_UP) {
+            System.out.println(event.getX() + ", " + event.getY()); //prints touch location for testing
             // touch was released
             if(this.buyMode){
-                this.buyTower(roundToNearest(new Point((int)event.getX(),(int)event.getY())));
+                //goes through all rectangles to see if pressed and placeable
+                for(int i = 0; i < 9; i++){
+                    for(int j = 0; j < 13; j++){
+                        if(placementPositions[i][j].getRectangle().contains((int) event.getX(), (int) event.getY()) && placementPositions[i][j].getPlaceable()){
+                            System.out.println("inside if");
+                            this.buyTower(new Point(placementPositions[i][j].getRectangle().centerX(), placementPositions[i][j].getRectangle().centerY()));
+                            placementPositions[i][j].setPlaceable(false);
+                        }
+                    }
+                }
             }
             if(this.sellMode){
                 this.sellTower(roundToNearest((new Point((int)event.getX(),(int)event.getY()))));
@@ -133,6 +168,18 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         }
         return true;
 
+    }
+
+    //used to scale for making rectangles
+    public int scaleIntW(double number){
+        double p = (number / bgWidth) * dstWidth;
+        int pInt = (int) (p + 0.5d);
+        return pInt;
+    }
+    public int scaleIntH(double number){
+        double p = (number / bgHieght) * (dstHeight);
+        int pInt = (int) (p + 0.5d);
+        return pInt;
     }
 
     //used to scale width of path point with background stretch
