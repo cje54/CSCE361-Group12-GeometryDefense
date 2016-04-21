@@ -19,6 +19,10 @@ public class Enemy {
     private int targetpoint;
     private Point position;
     private Level level;
+    private int imageCounter;
+    private int originalWidth;
+    private int originalHeight;
+    private Bitmap originalSprite;
 
     public Enemy(double hitpoints, double armor, double speed,int value,Bitmap sprite, ArrayList<Point> path,Level level) {
         this.hitpoints = hitpoints;
@@ -30,7 +34,37 @@ public class Enemy {
         this.level=level;
         this.targetpoint=1;
         this.position=new Point(path.get(0).x,path.get(0).y);
+        this.imageCounter = 0;
+        this.originalWidth = sprite.getWidth();
+        this.originalHeight = sprite.getHeight();
+        this.originalSprite = sprite;
     }
+
+    private void animateEnemy(){
+        int width = sprite.getWidth();
+        int height = sprite.getHeight();
+        double scaleWidth = 0;
+        double scaleHeight = 0;
+
+        if(imageCounter == 9){ //reset
+            imageCounter = 0;
+            sprite = Bitmap.createScaledBitmap(originalSprite, originalWidth, originalHeight, false);
+            return;
+        }
+
+        if(imageCounter < 5) {
+            scaleWidth = width * .99;
+            scaleHeight = height * .99;
+            imageCounter++;
+        }else{
+            scaleWidth = width * 1.01;
+            scaleHeight = height * 1.01;
+            imageCounter++;
+        }
+
+        sprite = Bitmap.createScaledBitmap(sprite, (int) scaleWidth, (int) scaleHeight, false);
+    }
+
 
     public double getSpeed() {
         return speed;
@@ -61,6 +95,7 @@ public class Enemy {
     }
 
     public void update(){
+        animateEnemy();
         //move at speed in x direction and y direction towards next point
         //take the sign of the difference of position and target to get direction
         this.position.x+=Math.signum(this.path.get(targetpoint).x - this.position.x)*speed;
