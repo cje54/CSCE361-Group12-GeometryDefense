@@ -51,19 +51,19 @@ public class Enemy {
         double scaleWidth = 0;
         double scaleHeight = 0;
 
-        if(imageCounter == 9){ //reset
+        if(imageCounter == 13){ //reset
             imageCounter = 0;
             sprite = Bitmap.createScaledBitmap(originalSprite, originalWidth, originalHeight, false);
             return;
         }
 
-        if(imageCounter < 5) {
-            scaleWidth = width * .99;
-            scaleHeight = height * .99;
+        if(imageCounter < 7) {
+            scaleWidth = width * .999;
+            scaleHeight = height * .999;
             imageCounter++;
         }else{
-            scaleWidth = width * 1.01;
-            scaleHeight = height * 1.01;
+            scaleWidth = width * 1.025;
+            scaleHeight = height * 1.025;
             imageCounter++;
         }
 
