@@ -43,7 +43,7 @@ public class Projectile {
     }
 
     public void draw(Canvas canvas){
-        canvas.drawBitmap(this.sprite, this.position.x,this.position.y, null);
+        canvas.drawBitmap(this.sprite, level.scalePointW(this.position.x),level.scalePointH(this.position.y), null);
 
     }
 

@@ -1,12 +1,17 @@
 package geometrydefense.geometrydefense;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.FrameLayout;
 
 
 import java.util.ArrayList;
@@ -14,44 +19,43 @@ import java.util.ArrayList;
 
 public class Level extends SurfaceView implements SurfaceHolder.Callback{
     private LevelThread thread;
+    private int levelID;
     private BitmapFactory.Options options = new BitmapFactory.Options();
-    private BitmapFactory.Options options4sprites = new BitmapFactory.Options();
-    private Bitmap levelMap;
-    private Bitmap towerImage;
-    private Bitmap projImage;
+    private Bitmap levelMap, towerImage, projImage,normEnemyImage, fastEnemyImage,slowEnemyImage,damageTowerImage,firerateTowerImage,rangeTowerImage, lastwaveImage;
     private ArrayList<Tower> towersOnScreen = new ArrayList<Tower>();
     private ArrayList<Enemy> enemiesOnScreen = new ArrayList<Enemy>();
     private ArrayList<Projectile> projOnScreen = new ArrayList<Projectile>();
     private ArrayList<Tower> destroyTower = new ArrayList<Tower>(); // keep track of list of objects to remove from screen since they cant be removed while looping though list
     private ArrayList<Enemy> deadEnemy=new ArrayList<Enemy>();
     private ArrayList<Projectile> destroyProj = new ArrayList<Projectile>();
-    private int gold=1000;
+    private int gold=500;
     private int lives=10;
     private int towerCost = 100;
     private double timetoNextWave=-1;     //number of ticks before wave is sent at 30 fps
     private double timetoNextEnemy=0;     //number of ticks before next enemy of a wave is sent
     private int enemiesLeft=0;      //number of enemies remaining in wave
-    private int enemyWave=0;     //current enemy wave number-used to choose which enemy to spawn from list
+    private int enemyWave=-1;     //current enemy wave number-used to choose which enemy to spawn from list
     private ArrayList<Enemy> enemyWaves = new ArrayList<Enemy>();
     private ArrayList<Point> enemyPath = new ArrayList<Point>();
+    private Tower selectedTower=null;  //keep track of which tower is selected for upgrademenu
     private LevelActivity activity;     //keep the creating activity to keep track of ui elements
     private boolean buyMode=false;  //boolean to keep track of if a tower is being placed -resets after placing tower
     private boolean sellMode = false; //same as buyMode except for selling an existing tower instead
     private Point buyTowerPoint;    //Point to keep track of where the user is hovering to place their tower-used to draw tower
-    private float density = getResources().getDisplayMetrics().density;
-    private int scaleMultipliyer = (int) (density +0.5f);
-    private int topUIHeight = (int) (180 * density +0.5f);
     private int dstWidth = getResources().getDisplayMetrics().widthPixels;
-    private int dstHeight = (getResources().getDisplayMetrics().heightPixels) - 180;
+    private int dstHeight = (int)((getResources().getDisplayMetrics().heightPixels)*.8125);
     private int bgWidth = 540;
-    private int bgHieght = 777;
+    private int bgHieght = 780;
+    private double xScale=(double)dstWidth/bgWidth;
+    private double yScale=(double)dstHeight/bgHieght;
 
 
 
 
-    public Level(LevelActivity activity){
+    public Level(LevelActivity activity, int levelID){
         super(activity);
         this.activity=activity;
+        this.levelID=levelID;
         // adding the callback (this) to the surface holder to intercept event
         getHolder().addCallback(this);
         setFocusable(true);
@@ -59,32 +63,84 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         thread = new LevelThread(getHolder(), this);
         //load level background
         options.inScaled = false;
-        options4sprites.inScaled = true;
-
-        levelMap = BitmapFactory.decodeResource(getResources(), R.drawable.level1map,options);
-        levelMap = Bitmap.createScaledBitmap(levelMap, dstWidth, dstHeight,true);
-        towerImage = BitmapFactory.decodeResource(getResources(),R.drawable.tower_sprite,options4sprites);
-        projImage = BitmapFactory.decodeResource(getResources(),R.drawable.projectile_sprite,options4sprites);
-
-        //create path list-enemies will start at first point and then go through all points until reaching the end
 
 
+        //get and scale sprites
+        towerImage = BitmapFactory.decodeResource(getResources(), R.drawable.normaltower, options);
+        towerImage = Bitmap.createScaledBitmap(towerImage, (int) (towerImage.getWidth() * xScale), (int) (towerImage.getHeight() * yScale), true);
+        damageTowerImage = BitmapFactory.decodeResource(getResources(), R.drawable.damagetower, options);
+        damageTowerImage = Bitmap.createScaledBitmap(damageTowerImage, (int) (damageTowerImage.getWidth() * xScale), (int) (damageTowerImage.getHeight() * yScale), true);
+        firerateTowerImage = BitmapFactory.decodeResource(getResources(), R.drawable.fireratetower, options);
+        firerateTowerImage = Bitmap.createScaledBitmap(firerateTowerImage, (int) (firerateTowerImage.getWidth() * xScale), (int) (firerateTowerImage.getHeight() * yScale), true);
+        rangeTowerImage = BitmapFactory.decodeResource(getResources(), R.drawable.rangetower, options);
+        rangeTowerImage = Bitmap.createScaledBitmap(rangeTowerImage, (int) (rangeTowerImage.getWidth() * xScale), (int) (rangeTowerImage.getHeight() * yScale), true);
+        projImage = BitmapFactory.decodeResource(getResources(), R.drawable.projectile, options);
+        projImage = Bitmap.createScaledBitmap(projImage, (int) (projImage.getWidth() * xScale), (int) (projImage.getHeight() * yScale), true);
+        normEnemyImage = BitmapFactory.decodeResource(getResources(), R.drawable.normalenemy, options);
+        normEnemyImage = Bitmap.createScaledBitmap(normEnemyImage, (int) (normEnemyImage.getWidth() * xScale), (int) (normEnemyImage.getHeight() * yScale), true);
+        slowEnemyImage = BitmapFactory.decodeResource(getResources(), R.drawable.slowenemy, options);
+        slowEnemyImage = Bitmap.createScaledBitmap(slowEnemyImage, (int) (slowEnemyImage.getWidth() * xScale), (int) (slowEnemyImage.getHeight() * yScale), true);
+        fastEnemyImage = BitmapFactory.decodeResource(getResources(), R.drawable.sanic, options);
+        fastEnemyImage = Bitmap.createScaledBitmap(fastEnemyImage, (int) (fastEnemyImage.getWidth() * xScale)/(fastEnemyImage.getWidth()/40), (int) (fastEnemyImage.getHeight() * yScale)/(fastEnemyImage.getHeight()/40), true);
+        lastwaveImage = BitmapFactory.decodeResource(getResources(), R.drawable.lastwave, options);
+        lastwaveImage = Bitmap.createScaledBitmap(lastwaveImage, (int)(lastwaveImage.getWidth()*xScale), (int)(lastwaveImage.getHeight()*yScale), true);
 
-        enemyPath.add(new Point(scalePointW(90.0),scalePointH(0.0)));
-        enemyPath.add(new Point(scalePointW(90.0),scalePointH(690.0)));
-        enemyPath.add(new Point(scalePointW(210.0),scalePointH(690.0)));
-        enemyPath.add(new Point(scalePointW(210.0),scalePointH(90.0)));
-        enemyPath.add(new Point(scalePointW(330.0),scalePointH(90.0)));
-        enemyPath.add(new Point(scalePointW(330.0),scalePointH(690.0)));
-        enemyPath.add(new Point(scalePointW(450.0),scalePointH(690.0)));
-        enemyPath.add(new Point(scalePointW(450.0),scalePointH(90.0)));
-        enemyPath.add(new Point(scalePointW(540.0),scalePointH(90.0)));
+        //create enemy and path list depending on levelID -enemies will start at first point and then go through all points until reaching the end
+        if(levelID==1) {
+            levelMap = BitmapFactory.decodeResource(getResources(), R.drawable.level1map, options);
 
-        //create enemy list
-        for(int i=0;i<10;i++){
-            enemyWaves.add(new Enemy(100+i*10,0,5,100+i*5,BitmapFactory.decodeResource(getResources(),R.drawable.normal_enemy_sprite,options4sprites),enemyPath,this));
+            enemyPath.add(new Point(90,0));
+            enemyPath.add(new Point(90,690));
+            enemyPath.add(new Point(210,690));
+            enemyPath.add(new Point(210,90));
+            enemyPath.add(new Point(330,90));
+            enemyPath.add(new Point(330,690));
+            enemyPath.add(new Point(450,690));
+            enemyPath.add(new Point(450,90));
+            enemyPath.add(new Point(540,90));
+            // 1 wave of normal enemies
+            for(int i=0;i<1;i++){
+                enemyWaves.add(new Enemy(100+i*10,0,5,50+i*5,normEnemyImage,enemyPath,this));
+            }
+        }else if(levelID==2){
+            levelMap = BitmapFactory.decodeResource(getResources(), R.drawable.level2map, options);
+
+            enemyPath.add(new Point(0,90));
+            enemyPath.add(new Point(450,90));
+            enemyPath.add(new Point(450,690));
+            enemyPath.add(new Point(210,690));
+            enemyPath.add(new Point(210,390));
+            enemyPath.add(new Point(0,390));
+            //3 waves of normal scaling then 1 fast + 1 slow
+            for(int i=0;i<3;i++){
+                enemyWaves.add(new Enemy(100+i*10,0,5,50+i*5,normEnemyImage,enemyPath,this));
+            }
+            enemyWaves.add(new Enemy(50, 0, 20, 30, fastEnemyImage,enemyPath,this));
+            enemyWaves.add(new Enemy(300, .1, 2, 100, slowEnemyImage,enemyPath,this));
+
+
+        }else if(levelID==3){
+            levelMap = BitmapFactory.decodeResource(getResources(), R.drawable.level3map, options);
+
+            enemyPath.add(new Point(450,0));
+            enemyPath.add(new Point(450,690));
+            enemyPath.add(new Point(270,690));
+            enemyPath.add(new Point(270,330));
+            enemyPath.add(new Point(90,330));
+            enemyPath.add(new Point(90,780));
+
+            //10 waves alternating fast+slow
+            for(int i=0;i<5;i++){
+                enemyWaves.add(new Enemy(50+10*i,0,20,30+i*5,fastEnemyImage,enemyPath,this));
+                enemyWaves.add(new Enemy(250+i*30,.05+.02*i,2,70+i*10,slowEnemyImage,enemyPath,this));
+            }
+
         }
+        //scale map
+        levelMap = Bitmap.createScaledBitmap(levelMap, dstWidth, dstHeight, true);
 
+        //update enemy image for first wave
+        this.activity.updateImage(R.id.next_enemy,new BitmapDrawable(enemyWaves.get(0).getSprite()));
 
         //set send now btn text
         activity.updateText(R.id.send_now_btn,"in: 0 sec\nsend now");
@@ -109,47 +165,95 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
     @Override
     //mouse events on canvas
     public boolean onTouchEvent(MotionEvent event) {
+        //scale down mouse points to match
+        int mouseX = (int)event.getX()*bgWidth/dstWidth;
+        int mouseY = (int)event.getY()*bgHieght/dstHeight;
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             // screen pressed
             if(this.buyMode){
-                this.buyTowerPoint=roundToNearest(new Point((int)event.getX(),(int)event.getY()));
+                this.buyTowerPoint=roundToNearest(new Point(mouseX,mouseY));
             }
 
         } if (event.getAction() == MotionEvent.ACTION_MOVE) {
             // drag event
             if(this.buyMode){
-                this.buyTowerPoint=roundToNearest(new Point((int)event.getX(),(int)event.getY()));
+                this.buyTowerPoint=roundToNearest(new Point(mouseX,mouseY));
             }
 
         } if (event.getAction() == MotionEvent.ACTION_UP) {
             // touch was released
             //check if in buy or sell mode and if not, check and see if a tower was selected to view range
-            Point action = roundToNearest(new Point((int)event.getX(),(int)event.getY()));
-            if(this.buyMode){
+            Point action = roundToNearest(new Point(mouseX,mouseY));
+            if (this.buyMode) {
                 this.buyTower(action);
-            }else  if(this.sellMode){
+            } else if (this.sellMode) {
                 this.sellTower(action);
-            }else {
+            } else {
                 for (Tower t : this.towersOnScreen) {
                     if (action.x == t.getPosition().x && action.y == t.getPosition().y) {
-                        t.toggleRange();
+                        //a tower was tapped-display upgrade menu and update
+                        if(t==selectedTower){
+                            //select tower was tapped, toggle selection to unselected
+                            selectedTower=null;
+                            activity.toggleMenu();
+                        }else{
+                            if(selectedTower!=null){
+                                selectedTower.toggleSelected();
+                            }else{
+                                activity.toggleMenu();
+                            }
+                            selectedTower=t;
+                        }
+                        t.updateMenu(this.activity,0);
+                        t.toggleSelected();
+
                     }
                 }
             }
-
         }
         return true;
-
     }
+
+    public void upgradeTower(int upgradeType,int cost){
+        if(this.gold>=cost){
+            this.updateGold(-cost);
+            this.selectedTower.upgrade(upgradeType);
+            if(upgradeType==1){
+                this.selectedTower.setTowerImage(this.damageTowerImage);
+            }else if(upgradeType==2){
+                this.selectedTower.setTowerImage(this.firerateTowerImage);
+            }else if(upgradeType==3) {
+                this.selectedTower.setTowerImage(this.rangeTowerImage);
+            }
+
+        }
+        this.selectedTower.toggleSelected();
+        this.selectedTower=null;
+        this.activity.toggleMenu();
+    }
+
+    public void updateTowerMenu(int upgradeType) {
+        if (this.selectedTower != null) {
+            this.selectedTower.updateMenu(this.activity,upgradeType);
+
+        }
+    }
+
+    public void closeUpgradeMenu(){
+        this.selectedTower.toggleSelected();
+        this.selectedTower=null;
+    }
+
+
 
     //used to scale width of path point with background stretch
     public int scalePointW(double point) {
-        double p = (point / bgWidth) * dstWidth;
+        double p = point*xScale;
         int pInt = (int) (p + 0.5d);
         return pInt;
     }
     public int scalePointH(double point) {
-        double p = (point / bgHieght) * (dstHeight);
+        double p = point*yScale;
         int pInt = (int) (p + 0.5d);
         return pInt;
     }
@@ -166,7 +270,7 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         if(gold>=towerCost){
             //check if the tower is in a valid position
             if(validPosition(position)) {
-                Tower t = new Tower(position, 50, 5, 200, this.towerImage, this.projImage, this);
+                Tower t = new Tower(position, 40, 20, 200, this.towerImage, this.projImage, this);
                 this.updateGold(-towerCost);
                 this.towersOnScreen.add(t);
             }
@@ -182,6 +286,26 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
                 return false;
             }
         }
+        //check if tower is on top of enemy path
+        Point p1=this.enemyPath.get(0);
+        Point p2;
+        for(int i=1;i<this.enemyPath.size();i++){
+            p2=p1;
+            p1=this.enemyPath.get(i);
+            //since all level paths have only vertical or horizontal straight paths, just check if the tower position lies between these points
+            if(p1.x==p2.x){
+                //if p.x are equal, points are vertical, check if tower point x=p.x and if the y is between the points
+                if(position.x==p1.x&&Math.max(p1.y,p2.y)>=position.y&&Math.min(p1.y,p2.y)<=position.y){
+                    //the tower position is on same x and between enemy path point y's so it is on the path
+                    return false;
+                }
+            }else{
+                if(position.y==p1.y&&Math.max(p1.x,p2.x)>=position.x&&Math.min(p1.x,p2.x)<=position.x){
+                    //the tower position is on same x and between enemy path point y's so it is on the path
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -192,9 +316,15 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
                 //tower at position-remove it and refund some gold
                 this.updateGold(t.getValue());
                 this.destroyTower.add(t);
+                if(t==this.selectedTower){
+                    this.activity.toggleMenu();
+                    this.selectedTower=null;
+                }
+
                 break; //towers cannot be on top of each other so break loop
             }
         }
+        //whether tower was sold or not, remove sellmode
 
     }
 
@@ -216,10 +346,14 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
 
     public void render(Canvas canvas){
         //draw own level map first
+        if(canvas==null){
+            this.endLevel(false);
+            return;
+        }
         canvas.drawBitmap(levelMap, 0, 0, null);
         //draw tower to be placed if in buymode and the user has their finger on sccreen for the coordinates
         if(this.buyMode&&this.buyTowerPoint!=null){
-            canvas.drawBitmap(this.towerImage,this.buyTowerPoint.x-this.towerImage.getWidth()/2,this.buyTowerPoint.y-this.towerImage.getHeight()/2,null);
+            canvas.drawBitmap(this.towerImage,scalePointW(this.buyTowerPoint.x)-this.towerImage.getWidth()/2,scalePointH(this.buyTowerPoint.y)-this.towerImage.getHeight()/2,null);
         }
         //draw all enemies, towers, and projectiles
         for(Enemy enemy:enemiesOnScreen){
@@ -273,11 +407,35 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
 
     }
 
+    public void endLevel(boolean win){
+        if(win){
+            //send back max level data
+            Intent i = new Intent();
+            i.putExtra("levelComplete", this.levelID);
+            this.activity.setResult(Activity.RESULT_OK, i);
+        }
+        this.thread.setRunning(false);
+        this.activity.finish();
+       // this.activity.finishActivity(0);
+    }
+
 
     public void sendWave(){
-        timetoNextWave=450;
-        enemiesLeft+=10;
-        spawnEnemy();
+        if(enemyWave==enemyWaves.size()-1){
+            //do nothing if on last wave
+        }else if (enemiesLeft<=0){
+            timetoNextWave=450;
+            enemiesLeft+=10;
+            this.activity.updateText(R.id.enemies_remaining,"Sending: "+enemiesLeft);
+            enemyWave++;
+            //update next wave image
+            if(enemyWave==enemyWaves.size()-1){
+                //last wave sent
+                this.activity.updateImage(R.id.next_enemy,new BitmapDrawable(lastwaveImage));
+            }else{
+                this.activity.updateImage(R.id.next_enemy,new BitmapDrawable(enemyWaves.get(enemyWave+1).getSprite()));
+            }
+        }
     }
 
     public void spawnEnemy(){
@@ -289,15 +447,19 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         //create new copy of enemy from waves and add it to list of enemies on screen to spawn it
         enemiesOnScreen.add(new Enemy(enemy.getHitpoints(),enemy.getArmor(),enemy.getSpeed(),enemy.getValue(),enemy.getSprite(),enemy.getPath(),this));
         enemiesLeft-=1;
+        this.activity.updateText(R.id.enemies_remaining,"Sending: "+enemiesLeft);
     }
 
-    public void updateGold(int gold){
-        this.gold+=gold;
+    public void updateGold(int gold) {
+        this.gold += gold;
         activity.updateText(R.id.gold_text,"Gold: "+this.gold);
     }
 
     public void loselife(Enemy enemy){
         this.lives-=1;
+        if(this.lives<=0){
+            this.endLevel(false);
+        }
         activity.updateText(R.id.lives_text, "Lives: " + this.lives);
     }
 
@@ -310,6 +472,11 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
                 if(p.getTarget().equals((Enemy)object)){
                     this.destroyProj.add(p);
                 }
+            }
+            //if enemy is removed check to see if it is the last one of the last wave and end level if so
+            if(this.enemyWave==this.enemyWaves.size()-1&&this.enemiesLeft==0&&this.enemiesOnScreen.size()==1){
+                //end level, win if lives > 0
+                this.endLevel(this.lives>0);
             }
         }else if (object.getClass()==Tower.class){
             destroyTower.add((Tower)object);
@@ -327,4 +494,6 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         return this.enemiesOnScreen;
     }
 
+
 }
+

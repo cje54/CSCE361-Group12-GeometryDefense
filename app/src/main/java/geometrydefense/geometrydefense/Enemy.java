@@ -3,6 +3,8 @@ package geometrydefense.geometrydefense;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
 
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 
 public class Enemy {
     private double hitpoints;
+    private double maxhitpoints;
     private double armor;
     private double speed;
     private int value;
@@ -24,6 +27,7 @@ public class Enemy {
     private int originalHeight;
     private Bitmap originalSprite;
 
+
     public Enemy(double hitpoints, double armor, double speed,int value,Bitmap sprite, ArrayList<Point> path,Level level) {
         this.hitpoints = hitpoints;
         this.armor = armor;
@@ -33,6 +37,7 @@ public class Enemy {
         this.path = path;
         this.level=level;
         this.targetpoint=1;
+        this.maxhitpoints=hitpoints;
         this.position=new Point(path.get(0).x,path.get(0).y);
         this.imageCounter = 0;
         this.originalWidth = sprite.getWidth();
@@ -64,7 +69,6 @@ public class Enemy {
 
         sprite = Bitmap.createScaledBitmap(sprite, (int) scaleWidth, (int) scaleHeight, false);
     }
-
 
     public double getSpeed() {
         return speed;
@@ -117,7 +121,22 @@ public class Enemy {
     }
 
     public void draw(Canvas canvas){
-        canvas.drawBitmap(this.sprite,this.position.x-this.sprite.getWidth()/2,this.position.y-this.sprite.getHeight()/2,null);
+        //draw self
+        canvas.drawBitmap(this.sprite,level.scalePointW(this.position.x)-this.originalWidth/2,level.scalePointH(this.position.y)-this.originalHeight/2,null);
+
+
+        //draw healthbar if damaged
+        if(this.hitpoints<this.maxhitpoints){
+            Paint p = new Paint();
+            p.setColor(Color.GREEN);
+            int left=level.scalePointW(this.position.x)-this.originalWidth/2;
+            int right=left+this.originalWidth;
+            int mid=(int)((right-left)*hitpoints/maxhitpoints)+left;
+            int top=level.scalePointH(this.position.y)-4;
+            canvas.drawRect(left, top, mid, top + 8, p);
+            p.setColor(Color.RED);
+            canvas.drawRect(mid,top,right,top+8,p);
+        }
 
     }
 

@@ -43,6 +43,7 @@ public class LevelThread extends Thread {
         long start; //time at start of cycle
         long diff;  //time difference between start of cycle and after update/render
         while(running){
+
             canvas = this.surfaceHolder.lockCanvas();
             start = System.currentTimeMillis(); //get time at the start of the cycle
             this.level.update();
@@ -54,9 +55,11 @@ public class LevelThread extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
-            surfaceHolder.unlockCanvasAndPost(canvas);
-
+            try {
+                surfaceHolder.unlockCanvasAndPost(canvas);
+            }catch(IllegalStateException e){
+                e.printStackTrace();
+            }
         }
 
 
