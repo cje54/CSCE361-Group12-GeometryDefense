@@ -50,7 +50,6 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
 
 
 
-
     public Level(LevelActivity activity, int levelID){
         super(activity);
         this.activity=activity;
