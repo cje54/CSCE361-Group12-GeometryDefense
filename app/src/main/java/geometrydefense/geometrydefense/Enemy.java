@@ -1,7 +1,6 @@
 package geometrydefense.geometrydefense;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -122,7 +121,7 @@ public class Enemy {
 
     public void draw(Canvas canvas){
         //draw self
-        canvas.drawBitmap(this.sprite,level.scalePointW(this.position.x)-this.originalWidth/2,level.scalePointH(this.position.y)-this.originalHeight/2,null);
+        canvas.drawBitmap(this.sprite, level.scalePointW(this.position.x) - this.originalWidth / 2, level.scalePointH(this.position.y) - this.originalHeight / 2, null);
 
 
         //draw healthbar if damaged

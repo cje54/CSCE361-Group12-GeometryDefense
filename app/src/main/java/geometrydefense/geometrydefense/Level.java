@@ -7,11 +7,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.widget.FrameLayout;
 
 
 import java.util.ArrayList;
@@ -51,7 +50,6 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
 
 
 
-
     public Level(LevelActivity activity, int levelID){
         super(activity);
         this.activity=activity;
@@ -63,6 +61,7 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         thread = new LevelThread(getHolder(), this);
         //load level background
         options.inScaled = false;
+
 
 
         //get and scale sprites
@@ -140,10 +139,14 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
         levelMap = Bitmap.createScaledBitmap(levelMap, dstWidth, dstHeight, true);
 
         //update enemy image for first wave
-        this.activity.updateImage(R.id.next_enemy,new BitmapDrawable(enemyWaves.get(0).getSprite()));
+        this.activity.updateImage(R.id.next_enemy, new BitmapDrawable(enemyWaves.get(0).getSprite()));
 
         //set send now btn text
-        activity.updateText(R.id.send_now_btn,"in: 0 sec\nsend now");
+        activity.updateText(R.id.send_now_btn, "in: 0 sec\nsend now");
+
+        //update gold text
+        updateGold(0);
+
 
 
     }
