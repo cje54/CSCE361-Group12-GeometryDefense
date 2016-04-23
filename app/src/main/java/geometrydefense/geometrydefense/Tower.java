@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.RectF;
 
 import java.util.ArrayList;
 
@@ -80,7 +81,7 @@ public class Tower{
             p.setAlpha(130);
             int rangeX=level.scalePointW(this.position.x-this.range);
             int rangeY=level.scalePointH(this.position.y-this.range);
-            canvas.drawOval(rangeX,rangeY,rangeX+2*level.scalePointW(this.range),rangeY+2*level.scalePointH(this.range),p);
+            canvas.drawOval(new RectF(rangeX,rangeY,rangeX+2*level.scalePointW(this.range),rangeY+2*level.scalePointH(this.range)),p);
         }
     }
 

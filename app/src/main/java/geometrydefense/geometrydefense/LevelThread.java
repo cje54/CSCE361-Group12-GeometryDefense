@@ -2,7 +2,6 @@ package geometrydefense.geometrydefense;
 
 
 import android.graphics.Canvas;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 /**
@@ -57,7 +56,9 @@ public class LevelThread extends Thread {
             }
             try {
                 surfaceHolder.unlockCanvasAndPost(canvas);
-            }catch(IllegalStateException e){
+            }catch(Exception e){
+                //stop running if exception
+                this.running=false;
                 e.printStackTrace();
             }
         }
