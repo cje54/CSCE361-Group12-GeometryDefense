@@ -23,6 +23,7 @@ public class Tower{
     private boolean selected=false;
 
 
+
     public Tower(Point position, int damage, int firerate, int range, Bitmap towerImage, Bitmap projImage, Level level) {
         this.level = level;
         this.towerImage = towerImage;

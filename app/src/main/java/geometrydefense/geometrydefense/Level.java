@@ -47,7 +47,6 @@ public class Level extends SurfaceView implements SurfaceHolder.Callback{
     private int bgHieght = 780;
     private double xScale=(double)dstWidth/bgWidth;
     private double yScale=(double)dstHeight/bgHieght;
-    private MediaPlayer hitNoise;
 
 
 
